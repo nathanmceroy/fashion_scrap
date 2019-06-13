@@ -1,0 +1,252 @@
+from bs4 import BeautifulSoup as bs
+import requests
+import os
+import math
+import csv
+
+categories = ['clothing', 'accessories', 'footwear', 'swimwear']
+
+brands = []
+titles = []
+prices = []
+variants = []
+urls = []
+surf_stitch = []
+
+os.chdir('../items')
+
+def list_clean():
+    for num in range(0, len(variants)):
+        item = brands[num] , titles[num], prices[num], variants[num], urls[num]
+        surf_stitch.append(item)
+        num += 1
+
+def write_to_csv(brand, item):
+    f = open(f'{brand}/surf_stitch/{item}.csv', 'w')
+    csv_wr = csv.writer(f)
+    csv_wr.writerow(['Brand', 'Product title', 'color', 'Product price' , 'Product url', 'size 1', 'size 2', 'size 3', 'size 4', 'size 5', 'size 6', 'size 7', 'size 8', 'size 9', 'size 10', 'size 11', 'size 12', 'size 13', 'size 14', 'size 15', 'size 16', 'size 17', 'size 18'])
+    return csv_wr
+
+def web_page(url):
+    header = {"User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'}
+    page = requests.get(url, headers = header)
+    soup = bs(page.content, 'lxml')
+    return soup
+
+def grab_brand(category, num):
+    soup = web_page(f'https://www.surfstitch.com/womens/{category}?sz=20&start={num}')
+    all_brands = soup.find_all(class_='brand-name')
+    for item in all_brands:
+        brands.append(item.text) 
+    
+def grab_product_title(category, num):
+    soup = web_page(f'https://www.surfstitch.com/womens/{category}?sz=20&start={num}')
+    all_titles = soup.find_all(class_='swiper-product-tile-name')
+    for item in all_titles:
+        titles.append(item.text)
+
+def grab_product_price(category, num):
+    soup = web_page(f'https://www.surfstitch.com/womens/{category}?sz=20&start={num}')
+    all_prices = soup.find_all(class_='product-sales-price')
+    for item in all_prices:
+        prices.append(item.text)
+
+
+def grab_product_url(category, num):
+    soup = web_page(f'https://www.surfstitch.com/womens/{category}?sz=20&start={num}')
+    all_urls = soup.find_all(class_='name-link' , href=True)
+    for item in all_urls:
+        url3 = str(item)
+        url2 = url3.split('" tit')
+        url1 = url2[0][27:]
+        urls.append(url1)
+
+
+def grab_variants_from_urls(urll):
+    try:
+        #all variants for appending the top level list 
+        all_variants = []
+        #variants of the selected ones on first webpage
+        first_variants = []
+        # urls for other variants not selected
+        not_selected_urls = []
+        print(urll)
+        soup = web_page(urll)
+        #grabbing brand color
+        selected_value_old = soup.find(class_='selected-value').text
+        # replacing spaces with %20 
+        selected_value_new = selected_value_old.replace(' ', '%20')
+        #grabbing price
+        price3 = soup.find(class_='product-price').text
+        price2 = price3.strip()
+        price1 = price2.split('\n')
+        price = price1[-1]
+        #appending first_variants
+        first_variants.append(selected_value_old)
+        first_variants.append(price)
+        all_item_var = []
+        print(selected_value_old)
+        all_colors = soup.find_all('a' , {'class': 'swatchanchor'})
+        print('----------')
+        print(price)
+        #grabbing sizes and other variant urls
+        for sizes in all_colors:
+            try:
+                href = sizes.get('href')
+                title = sizes.get('title')
+                if 'Select Size:' in title:
+                    print(title[12:])
+                    all_item_var.append(title[12:])
+                # appending other variant urls 
+                if f'Colour={selected_value_new}' not in href:
+                    not_selected_urls.append(href)
+            except:
+                pass
+        first_variants.append(all_item_var)
+        all_variants.append(first_variants)
+        print(all_item_var)
+
+        for num in range(len(not_selected_urls)):
+            item_list = []
+            soup1 = web_page(not_selected_urls[num])
+            selected_value1 = soup1.find(class_='selected-value').text
+            all_colors1 = soup1.find_all('a' , {'class': 'swatchanchor'})
+            price3 = soup1.find(class_='product-price').text
+            price2 = price3.strip()
+            price1 = price2.split('\n')
+            price = price1[-1]
+            item_list.append(selected_value1)
+            item_list.append(price)
+            all_item_varr = []
+            print('----------')
+            print(selected_value1)
+            print(price)
+            for sizes in all_colors1:
+                title = sizes.get('title')
+                if 'Select Size:' in title:
+                    print(title[12:])
+                    all_item_varr.append(title[12:])
+
+            item_list.append(all_item_varr)
+            all_variants.append(item_list)
+            print(item_list)
+        variants.append(all_variants)
+    except:
+        pass
+
+def item_num(category):
+    try:
+        url = f'https://www.surfstitch.com/womens/{category}'
+        header = {"User-Agent":'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'}
+        page = requests.get(url, headers=header)
+        soup = bs(page.content, 'lxml')
+        item_no5 = soup.find(class_='results-hits').text
+        item_no4 = str(item_no5)
+        item_no3 = item_no4.strip()
+        item_no2 = item_no3.split(' ')
+        item_no1 = item_no2[0]
+        if ',' in item_no1:
+            item_no = item_no1[0] + item_no1[2:]
+            item = int(item_no)
+            return item
+        else:
+            item = int(item_no1)
+            return item
+    except:
+        item = 0
+        return item     
+
+n = 1
+
+for category in categories:
+    item_count = item_num(category)
+    print(item_count)
+    for num in range(0, item_count, 20):
+        print(f'page number {n} of {math.ceil(item_count/20)}')
+        grab_brand(category, num)
+        grab_product_title(category, num)
+        grab_product_price(category, num)
+        grab_product_url(category, num)
+        n += 1
+i = 1
+for item in urls:
+    print()
+    print(f'item num {i} of {item_count}')
+    print()
+    grab_variants_from_urls(item)
+    i += 1
+
+print(brands)
+print(surf_stitch)
+print(len(surf_stitch))
+
+
+def create_new_folders():
+    b = set(brands)
+    print(b)
+    print(len(b))
+    for item in b:
+        try:
+            os.mkdir(item)
+            os.chdir(item)
+            os.mkdir('surf_stitch')
+            os.chdir('..')
+        except:
+            pass
+    
+create_new_folders()
+
+list_clean()
+
+for item in surf_stitch:
+    try:
+        b = item[0]
+        t = item[1].replace(' ', '-')
+        write = write_to_csv(b, t)
+        for i in range(len(item[3])):
+            s = item[3][i][2]
+            print(item[3])
+            print(len(item[3]))
+            print(s)
+            print(len(s))
+            print('==================')
+            if len(s) == 1:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0]])
+            elif len(s) == 2:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1]])
+            elif len(s) == 3:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2]])
+            elif len(s) == 4:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3]])
+            elif len(s) == 5:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4]])
+            elif len(s) == 6:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5]])
+            elif len(s) == 7:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6]])
+            elif len(s) == 8:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7]])
+            elif len(s) == 9:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8]])
+            elif len(s) == 10:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9]])
+            elif len(s) == 11:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10]])
+            elif len(s) == 12:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10], item[3][i][2][11]])
+            elif len(s) == 13:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10], item[3][i][2][11], item[3][i][2][12]])
+            elif len(s) == 14:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10], item[3][i][2][11], item[3][i][2][12], item[3][i][2][13]])
+            elif len(s) == 15:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10], item[3][i][2][11], item[3][i][2][12], item[3][i][2][13], item[3][i][2][14]])
+            elif len(s) == 16:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10], item[3][i][2][11], item[3][i][2][12], item[3][i][2][13], item[3][i][2][14], item[3][i][2][15]])
+            elif len(s) == 17:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10], item[3][i][2][11], item[3][i][2][12], item[3][i][2][13], item[3][i][2][14], item[3][i][2][15], item[3][i][2][16]])
+            elif len(s) == 18:
+                write.writerow([item[0], item[1], item[3][i][0], item[3][i][1], item[4], item[3][i][2][0], item[3][i][2][1], item[3][i][2][2], item[3][i][2][3], item[3][i][2][4], item[3][i][2][5], item[3][i][2][6], item[3][i][2][7], item[3][i][2][8], item[3][i][2][9], item[3][i][2][10], item[3][i][2][11], item[3][i][2][12], item[3][i][2][13], item[3][i][2][14], item[3][i][2][15], item[3][i][2][16], item[3][i][2][17]])
+            else:
+                pass
+    except:
+        pass
