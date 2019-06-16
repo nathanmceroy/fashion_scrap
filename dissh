@@ -7,7 +7,7 @@ import csv
 import time
 
 
-# categories = ['accessories', 'clothing', 'shoes']
+categories = ['accessories', 'clothing', 'beauty']
 # , 'shoes', 'cosmetics', 'dresses', 'bottoms', 'tops', 'bodysuits', 'jackets-jumpers', 'swimwear', 'denim-shop', 'intimates', 'sets'
 
 brands = []
@@ -15,18 +15,18 @@ titles = []
 prices = []
 variants = []
 urls = []
-glue_store = []
+dissh = []
 
 os.chdir('../items')
 
 def list_clean():
     for num in range(0, len(variants)):
         item = brands[num] , titles[num], prices[num], variants[num], urls[num]
-        glue_store.append(item)
+        princess_polly.append(item)
         num += 1
 
 def write_to_csv(brand, item):
-    f = open(f'{brand}/glue_store/{item}.csv', 'w')
+    f = open(f'{brand}/princess_polly/{item}.csv', 'w')
     csv_wr = csv.writer(f)
     csv_wr.writerow(['Brand', 'Product title', 'color', 'Product price' , 'Product url', 'size 1', 'size 2', 'size 3', 'size 4', 'size 5', 'size 6', 'size 7', 'size 8', 'size 9', 'size 10', 'size 11', 'size 12', 'size 13', 'size 14', 'size 15', 'size 16', 'size 17', 'size 18'])
     return csv_wr
@@ -43,41 +43,38 @@ def xpath_page(url):
     xpa = lxml.html.fromstring(page.content)
     return xpa       
 
-def grab_brand(url):
-    soup = web_page(url)
-    all_brands = soup.find_all(class_='brandname')
-    for item in all_brands:
-        brand4 = str(item).split('">')
-        brand3 = brand4[1]
-        brand2 = brand3.split('</')
-        brand1 = brand2[0]
-        print(brand1)
-        brands.append(brand1)
-
-# grab_brand('https://www.gluestore.com.au/search/nav/gender/womens/0')
+# def grab_brand(url):
+#     soup = web_page(url)
+#     all_brands = soup.find_all(class_='product-brand')
+#     if len(all_brands) >=1:
+#         brand5 = str(all_brands).split('">')
+#         brand4 = brand5[2].split('</a>')
+#         brand3 = brand4[0]
+#         brand = str(brand3.replace('amp;', ''))
+#         brands.append(brand)
+#     else:
+#         brand = 'Princess Polly'
+#         brands.append(brand)
     
-def grab_product_title(url):
-    soup = web_page(url)
-    all_titles = soup.find_all(class_='title')
-    for item in all_titles:
-        title1 = str(item.text)
-        title = title1.strip()
-        titles.append(title)
-        print(title)
-
-# grab_product_title('https://www.gluestore.com.au/search/nav/gender/womens/0')
+    
+# def grab_product_title(url):
+#     soup = web_page(url)
+#     all_titles = soup.find_all(class_='product-name')
+#     for item in all_titles:
+#         title1 = str(item.text)
+#         title = title1.strip()
+#         titles.append(title)
 
 def grab_product_price(url):
     soup = web_page(url)
-    all_prices = soup.find_all(class_='price')
-    for item in all_prices:
-        price3 = str(item).split('">')
-        price2 = price3[1].split('</')
-        price1 = price2[0]
-        print(price1)
-        prices.append(price1)
+    price4 = soup.find(class_='price ng-binding')
+    # price3 = str(price4).split('>')
+    # price2 = price3[1].split('<')
+    # price1 = price2[0]
+    print(price4)
+    # prices.append(price)
 
-# grab_product_price('https://www.gluestore.com.au/search/nav/gender/womens/0')
+grab_product_price('https://dissh.com.au/collections/clothing')
 
 # def colours_sizes(url):
 #     xpa = xpath_page(url)
@@ -87,43 +84,44 @@ def grab_product_price(url):
 
 # colours_sizes('https://www.princesspolly.com/carson-mini-dress')
 
-def grab_all_urls(url):
+# def grab_all_urls(url):
     soup = web_page(url)
-    clothing_item = soup.find_all(class_='sli_grid_product ecommerce_click')
+    clothing_item = soup.find_all(class_='product-item__link')
     for item in clothing_item:
-        url3 = str(item)
-        url2 = url3.split('href="')
-        url1 = url2[1].split('">')
-        url = url1[0]
-        urls.append(url)
+        url4 = str(item)
+        url3 = url4.split('clothing/')
+        url2 = url3[1].split('">')
+        url1 = url2[0]
+        url = f'https://dissh.com.au/{url1}'
+        # # urls.append(url)
         print(url)
         print()
         print('-------------------------')
         print()
 
-# grab_all_urls('https://www.gluestore.com.au/womens.html')
+# grab_all_urls('https://dissh.com.au/collections/clothing')
 
+# def item_num(category):
+#     soup = web_page(f'https://dissh.com.au/collections/{category}')
+#     num5 = soup.find(class_='ss-header-container')
+#         # num4 = str(num5).strip()
+#         # num3 = num4.split(' ')
+#         # num2 = int(num4)
+#         # num = int(num3)
+#     #     return num
+#     # except:
+#     #     num = 1
+#     #     return num
+#     print(num5)
+#     return num5
 
-def item_num():
-        soup = web_page(f'https://www.gluestore.com.au/womens.html')
-        num5 = soup.find(class_='sli_count quantity').text
-        num4 = str(num5).strip()
-        num3 = num4.split('(')
-        num2 = num3[1].split(')')
-        num1 = num2[0]
-        num = int(num1)
-        print(num)
-        return num
+# item_num('clothing')
 
-# item_num()
-
-
-page_numbers = math.ceil(item_num()/18)
-for num in range(0, 1):
-    grab_all_urls(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
-    grab_product_price(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
-    grab_product_title(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
-    grab_brand(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
+# for category in categories:
+#     page_numbers = math.ceil(item_num(category)/24)
+#     for num in range(1, 2):
+#         print(category)
+#         grab_all_urls(f'https://dissh.com.au/{category}?page={num}')
 
 
 # for url in urls:
