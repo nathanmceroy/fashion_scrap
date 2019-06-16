@@ -70,14 +70,14 @@ def grab_product_title(url):
 def grab_product_price(url):
     soup = web_page(url)
     all_prices = soup.find_all(class_='price')
-    for item in all_prices:
+    for item in all_prices[1:]:
         price3 = str(item).split('">')
         price2 = price3[1].split('</')
         price1 = price2[0]
         print(price1)
         prices.append(price1)
 
-# grab_product_price('https://www.gluestore.com.au/search/nav/gender/womens/0')
+grab_product_price('https://www.gluestore.com.au/search/nav/gender/womens/1')
 
 # def colours_sizes(url):
 #     xpa = xpath_page(url)
@@ -118,12 +118,12 @@ def item_num():
 # item_num()
 
 
-page_numbers = math.ceil(item_num()/18)
-for num in range(0, 1):
-    grab_all_urls(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
-    grab_product_price(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
-    grab_product_title(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
-    grab_brand(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
+# page_numbers = math.ceil(item_num()/18)
+# for num in range(0, page_numbers + 1):
+#     grab_all_urls(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
+#     grab_product_price(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
+#     grab_product_title(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
+#     grab_brand(f'https://www.gluestore.com.au/search/nav/gender/womens/{num}')
 
 
 # for url in urls:
